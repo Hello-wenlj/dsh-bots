@@ -1,0 +1,35 @@
+{
+  "name": "dsh-plugin-dsh-rollback-recovery",
+  "version": "0.1.0",
+  "description": "当需要回滚或恢复 DSH（DeepSeek Harness）时使用：dsh.sh 的 run/web/acp/version 起不来、升级后调用面异常、出口代理不生效（HTTP_PROXY/.env 分层）、需回退旧版本。固化 npm 回滚口径、四处版本敏感区（含 mcp.json）、4 项冒烟。",
+  "author": "Hello-wenlj",
+  "homepage": "",
+  "keywords": [
+    "dsh-plugin",
+    "exported"
+  ],
+  "license": "SEE README",
+  "type": "module",
+  "files": [
+    "cordis.patch.yml",
+    "skills.mjs",
+    "skills",
+    "README.md",
+    "setup-prompt.md",
+    "references"
+  ],
+  "engines": {
+    "dsh": "*"
+  },
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hello-wenlj/dsh-bots.git",
+    "directory": "bots/dsh-rollback-recovery"
+  }
+}
