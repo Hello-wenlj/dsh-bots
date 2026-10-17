@@ -15,8 +15,7 @@
     "skills.mjs",
     "skills",
     "README.md",
-    "setup-prompt.md",
-    "references"
+    "setup-prompt.md"
   ],
   "engines": {
     "dsh": "*"
