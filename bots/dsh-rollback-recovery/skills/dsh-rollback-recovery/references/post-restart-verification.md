@@ -26,7 +26,7 @@ bash ~/.workbuddy/scripts/dsh_health_probe.sh --dimensions # 四维覆盖性消�
 | 9 | **活动实例端点真应答** | 提取 `harness.log` 末条 `dsh web:` 的 port/token → cookie 交换 → `GET /` 断言 200；**真打运行中实例**，堵第 7 项「只看 trace 日志」的日志推断式假绿 |
 | 10 | **recovery-gap 观测** | 扫 `harness.log` 近 14 天 `[recovery-gap]`；出现 ⇒ pnpm 输出含 rename-blocker 码但 `lockedRenameTarget` 取不到 target，recovery 静默不触发（潜伏缺口已激活）⇒ FAIL |
 | 11 | **gate 接线走 choice** | 跑 `gate-choice.runtime.mjs`（**真 apply + 真触发** `tools/pre-execute`）⇒ `VERDICT=CHOICE_OK kind=choice`；`NOUL` = 接线退化为旧问法 ⇒ FAIL |
-| 12 | **规格合规（动作不越界）** | 调 `scripts/dsh_spec_compliance.py --scan $SELF` ⇒ `VERDICT=COMPLIANT`：写目标须在临时面/白名单、无破坏性原语、无 `--apply`。往本探针注入 `rm -f` 即 FAIL（探针 **M16**） |
+| 12 | **规格合规（动作不越界）** | 调 `~/.workbuddy/scripts/dsh_spec_compliance.py --scan $SELF` ⇒ `VERDICT=COMPLIANT`：写目标须在临时面/白名单、无破坏性原语、无 `--apply`。往本探针注入 `rm -f` 即 FAIL（探针 **M16**） |
 
 ## 关键穷证：一行双证
 
@@ -80,7 +80,7 @@ apply pid=13768 v=0.2.0 hooks=post-execute,pre-execute,request-error jev=ready
 - 动机：四维覆盖性论证（下节）照出**整类空洞** —— 其余各项证的全是「判据有牙 / 不误报」
   （各判据的 `--selftest` 正负两控），**没有一项**检查核验或修复**动作自己**是否越界。
   换言之：探针从不误报**别人**，但**它自己**会不会顺手删文件，此前无人问。
-- 实现：调 `scripts/dsh_spec_compliance.py --scan "$SELF"`。**判据不内联**（单一来源），
+- 实现：调 `~/.workbuddy/scripts/dsh_spec_compliance.py --scan "$SELF"`。**判据不内联**（单一来源），
   逻辑全在该器：`R1` 写重定向目标白名单（仅 `/dev/null` 与 `${SELFTMP_DIR|TMPDIR}` 系）、
   `R1b` **变量洗白拦截**（白名单变量还须**赋值落在临时面**，光声明不放行）、
   `R1c` python 内联写须带 `# SPEC-WRITE-EXEMPT:` 标注、`R2` 破坏性原语禁用、
@@ -131,13 +131,13 @@ apply pid=13768 v=0.2.0 hooks=post-execute,pre-execute,request-error jev=ready
 | 维度 | 本文件对应项 | 强度 |
 |---|---|---|
 | 分数复现（真跑取数，非读日志） | 第 6 项（`--version` 实测）、第 9 项（真打活动实例断言 200）、第 11 项（真跑 runtime 取 `VERDICT`） | 🟢 三项皆真跑 |
-| 规格合规（动作本身不越界） | **第 12 项**（`scripts/dsh_spec_compliance.py`，见上「第 12 项」节） | 🟢 真跑：扫**核验器自身**；M16（往宿主注入 `rm -f`）／M17（合规器恒判合规）**双向有牙** |
+| 规格合规（动作本身不越界） | **第 12 项**（`~/.workbuddy/scripts/dsh_spec_compliance.py`，见上「第 12 项」节） | 🟢 真跑：扫**核验器自身**；M16（往宿主注入 `rm -f`）／M17（合规器恒判合规）**双向有牙** |
 | 引用可溯（指称指向真实对象） | 第 7 项（trace 末行 ↔ `harness.log` 末条须同一实例、差 <300s）、第 8 项（凭据存在性） | 🟡 |
 | 方法-代码对齐（声称 vs 实际分支） | 第 11 项（config 声称 `choice` vs 代码实际走 `noul`） | 🟢 直接命中 |
 
 **本次映射的产出 = 发现的空洞**：「规格合规」维度**零覆盖**。当时的 11 项证的是「判据有牙 / 不误报」（`--selftest` 的正负两控），**没有一项**检查核验或修复**动作自身**是否越界。
 
-> **【260930 闭合】** 该空洞**已填**：新增**第 12 项**（`scripts/dsh_spec_compliance.py`，见上节），
+> **【260930 闭合】** 该空洞**已填**：新增**第 12 项**（`~/.workbuddy/scripts/dsh_spec_compliance.py`，见上节），
 > 本表「规格合规」行由 ⚠️ 空洞 改为 🟢。该闭合同时进了 WB 回归第 **116** 项，并配 **M16/M17** 两条探针。
 > 原文保留在上（如实记录当时的空洞状态），**勿再按「零覆盖」引用**。
 
