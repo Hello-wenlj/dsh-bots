@@ -10,6 +10,13 @@
   ],
   "license": "SEE README",
   "type": "module",
+  "main": "skills.mjs",
+  "exports": {
+    ".": "./skills.mjs",
+    "./skills.mjs": "./skills.mjs",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
   "files": [
     "cordis.patch.yml",
     "skills.mjs",
