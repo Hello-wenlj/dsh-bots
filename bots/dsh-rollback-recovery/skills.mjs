@@ -1,5 +1,12 @@
 // Registers this bundle's skills on the skill registry of the preset that mounts it.
 // Zero dependencies: reads skills/*/SKILL.md next to this file and calls ctx.skills.register().
+//
+// `source` is NOT optional in practice. The registry never validates a runtime
+// registration at register() time, but every later `skills.get(name)` runs
+// validateDefinition(), which throws `source must be a string` when it is
+// missing -- the skill then lists fine and fails only when the model loads it.
+// Both runtime registrations shipped with the Harness (`dsh-ppt`, the Windows
+// ACL diagnosis skill) set it. Never drop this field.
 import { readdirSync, readFileSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -30,11 +37,15 @@ export function apply (ctx) {
     const file = join(root, dir.name, 'SKILL.md')
     if (!existsSync(file)) continue
     const parsed = parse(readFileSync(file, 'utf8'))
-    if (!parsed || !parsed.meta.name || !parsed.meta.description) continue
+    if (!parsed || !parsed.meta.name || !parsed.meta.description) {
+      ctx.logger?.warn?.('dsh-rollback-recovery-skills: ' + dir.name + ': SKILL.md 缺 name/description，已跳过')
+      continue
+    }
     try {
       ctx.skills.register({
         name: parsed.meta.name,
         description: parsed.meta.description,
+        source: 'bundle',
         content: parsed.body,
         resourceBase: { kind: 'directory', path: join(root, dir.name) }
       })
