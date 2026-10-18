@@ -16,7 +16,7 @@ $env:DEEPSEEK_API_KEY = "sk-<凭据中心取原始值>"
 
 取 `grade` / `cost_usd` / `total_tokens` 与回滚前基线比对：**基线不存在则本次即为首版基线存档**。
 
-判读注意——DSH 内置 `pwsh` 在中文 Windows 损坏（`exit 0xFFFF0000`，见 `DSH-PWSH-DEFECT-ISSUE.md`）
+判读注意——DSH 内置 `pwsh` 在中文 Windows 损坏（`exit 0xFFFF0000`，属环境缺陷、非版本问题）
 会虚高成本 ~66%，若 `toolCalls` 里 pwsh 反复重试而 `grade=fail`，先排除该环境缺陷再判成本回归。
 
 **纯冒烟与回滚本身不依赖本步骤。**
