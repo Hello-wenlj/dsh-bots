@@ -31,11 +31,11 @@
    "versions": [
     {
      "version": "0.1.0",
-     "publishTimestamp": 1792281897,
+     "publishTimestamp": 1792282092,
      "source": {
       "type": "git",
       "url": "https://github.com/Hello-wenlj/dsh-bots.git",
-      "commit": "29aa887908c2ecbcdb1881d2da8902d798c3958a",
+      "commit": "cfb276560983ccb6fec1f93efd00c9034548f600",
       "path": "bots/dsh-rollback-recovery"
      },
      "engines": {
