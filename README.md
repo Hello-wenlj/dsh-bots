@@ -66,6 +66,29 @@ cp -r bots/dsh-rollback-recovery/skills/dsh-rollback-recovery \
 `docs/index.json` 是本仓库**自用清单**（记录 pin 与来源），`format` 是本仓自定义值，
 不被市场读取 —— 不要当市场 feed 用。
 
+### 公开目录 `awesome-dsh-workbench` 也进不了（品类不符，非结构问题）
+
+`dataelement/awesome-dsh-workbench` 是公开投稿目录，容易误以为「整理好目录结构就能投」。
+读其源码（2026-10-18，`scripts/probe-lib.mjs` + `catalog/README.md` + `schema/workbench.schema.json`）后确认**不收纯 skill bundle**：
+
+1. **探测硬读根目录** —— `probeEntry()` 里是
+   `fetchJsonFile(..., commit.sha, 'package.json')`，拼死路径
+   `raw.githubusercontent.com/{owner}/{repo}/{sha}/package.json`。**即使填 `tarball`
+   走 Release 分支，也先读根 `package.json` 过 `validatePackage()`**。本仓 bundle 在
+   `bots/<slug>/`，根目录没有 `package.json`，第一步就 404。
+2. **但它收的是「工作台」** —— `catalog/README.md`「包与宿主」原文：
+   > 当前只支持仓库根目录的一个工作台，暂不支持 monorepo 子目录。
+
+   且 `validatePackage()` 强制要求 `dsh.client.inject` 含 `dsh-desktop-workbenches`、
+   存在 `exports["./client"]`。这是**带 UI 的客户端插件**契约 —— 会在 Desktop 里注册
+   自己的前端面板。本仓是纯 skill bundle（`skills.mjs` + `cordis.patch.yml`），
+   没有 client 入口，也没有 UI。
+3. **分类枚举不覆盖** —— `category` 只有 7 个值：
+   `development / productivity / content / data / research / operations / other`，无 skill 类。
+
+所以这不是「差一张实拍截图」「改成根目录单包」能补的 —— 要进去得先把它变成带前端面板的
+工作台，那是另一个产品形态。**技能类 bundle 目前没有官方市场入口，手工拷贝是唯一路径。**
+
 ## 供应链校验
 
 `index.json` 里每个 version 的 `source.commit` 是 **40 位 commit pin**，不是分支名。
