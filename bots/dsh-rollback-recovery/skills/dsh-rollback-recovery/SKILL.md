@@ -46,14 +46,7 @@ cd D:/dsh-npm
 
 **发版全为预发布**：`latest` 常落后 `next`。求最新取 `next`，求稳锁版本。根包 `@deepseek-ai/dsh-root` 为 `private:true`，只能装 `@deepseek-ai/dsh`。回滚后**必须重跑 4 项冒烟**。
 
-> 🔗 **成本回归验证（嵌入 @skill:harness-cost-probe）**：版本回退/升级后，若需确认「调用成本未劣化」，跑一次固定任务探针并与基线并排——
-> ```powershell
-> # 沙箱外真实终端（沙箱封 spawn/出网，探针沙箱内跑不了）
-> cd D:/wlj-workbuspace/2026-10-05-09-10-20/harness-compare
-> $env:DEEPSEEK_API_KEY = "sk-<凭据中心取原始值>"
-> & "C:/Users/wenlj/.workbuddy/binaries/node/versions/22.22.2-3/node.exe" runner/probe.mjs dsh deepseek-v4-pro
-> ```
-> 取 `grade` / `cost_usd` / `total_tokens` 与回滚前基线比对：**基线不存在则本次即为首版基线存档**。判读注意——DSH 内置 `pwsh` 在中文 Windows 损坏（`exit 0xFFFF0000`，见 `DSH-PWSH-DEFECT-ISSUE.md`）会虚高成本 ~66%，若 `toolCalls` 里 pwsh 反复重试而 `grade=fail`，先排除该环境缺陷再判成本回归。纯冒烟与回滚本身不依赖本步骤。
+> 🔗 **成本回归验证**（`@skill:harness-cost-probe`）：回退/升级后可跑固定任务探针，比对 `grade`/`cost_usd`/`total_tokens` 与基线（基线不存在则本次即首版）。⚠️ `pwsh` 在中文 Windows 损坏（`exit 0xFFFF0000`）会虚高成本 ~66%，先排除再判。**命令、路径与判读细节见 `references/r3-patch-and-cost-probe.md` §一**。纯冒烟与回滚不依赖此步。
 
 ## 二、执行前自检
 
@@ -103,16 +96,13 @@ DSH_TOOLS_MODE=ptc "$NODE" "$BIN" --profile headless \
 
 `upgrade-dsh.sh` 一条命令走完升级（**已不再需要 git / pnpm**）→ `references/version-sensitive-zones.md` §5。
 
-> 🔴 **升级/重装后 R3 补丁自愈（嵌入 @runtime:dsh-r3-patch-self-heal）**：升级或 `npm install` 重装会还原 `dsh-tool-pwsh`/`dsh-pwsh-local`，坏 pwsh（`exit 0xFFFF0000`）根因随之复活。重跑一次对应 `apply` 脚本（版本闸门自动判定）：
-> ```powershell
-> # D 盘 npm 根（0.1.5 CJS）——postinstall 已挂，手动补跑：
-> & "C:/Users/wenlj/.workbuddy/binaries/node/versions/22.22.2-3/node.exe" "D:/dsh-npm/apply-r3-patch.cjs"
-> # F 盘 Desktop 根（0.1.7 ESM）——无自动触发，升级后手动跑：
-> & "C:/Users/wenlj/.workbuddy/binaries/node/versions/22.22.2-3/node.exe" "D:/dsh-npm/apply-r3-patch-f-desktop.cjs"
-> ```
-> 判读：`already patched, skip` / `patched OK` 即生效；**`[BLOCKED] installed != patch-built` 表示已升版本** → 脚本拒绝用旧固化源覆盖新结构（fail-closed），需基于新版重生成 `r3-patches` 固化源（属写新结构 node_modules，须先核验再经 Kevin 确认）。版本闸门依据 `r3-patches[/f-desktop]/MANIFEST.json` 的 expectedVersion。
+> 🔴 **升级/重装后 R3 补丁自愈 + 版本闸门**（`@runtime:dsh-r3-patch-self-heal`）：升级或 `npm install`
+> 会还原坏 pwsh（`exit 0xFFFF0000`），重跑 `apply-r3-patch.cjs`（D 盘 npm 根）/ `apply-r3-patch-f-desktop.cjs`
+> （F 盘 Desktop 根）。判读：`already patched` / `patched OK` = 生效；**`[BLOCKED] installed != patch-built`
+> = 版本已变，脚本 fail-closed 停手呈报，禁旧固化源覆盖新结构**。闸门读 `package.json.version` 与
+> `MANIFEST.json` 的 `expectedVersion` 比对。完整命令与「同版本自主恢复／版本变停手」边界
+> → `references/r3-patch-and-cost-probe.md` §二§三。
 
-> 🔴 **版本闸门判读口径（嵌入 @runtime:dsh-r3-patch-self-heal）**：`apply` 脚本启动时读已装 `@deepseek-ai/dsh-tool-pwsh`/`dsh-pwsh-local` 的 `package.json.version`，与 `MANIFEST.json` 的 `expectedVersion` 比对——**一致**才复制固化源（已含 marker 则跳过，幂等）；**不一致**（版本升级）即 `[BLOCKED]` + 退出非零、**绝不覆盖**，避免旧版补丁源套新版文件致结构性崩坏。故日后 Kevin 告知"workbuddy/dsh-desktop 版本更新"：同版本 → agent 自主跑脚本恢复（零干预）；版本变 → 脚本报阻断、agent 停手呈报，重派生固化源仍走"先核验再你批"。该机制把"自主执行"框在安全边界内，不静默猜覆盖。
 ## 六、历史形态：幽灵目录根因
 
 > 前提是 `F:/DSH` 源码构建 + `.git`，**当前 npm 架构不适用**。根因链、判据与恢复步骤已下沉：`references/ghost-dir-history.md`。
@@ -190,6 +180,7 @@ config 写法 = **用户层 patch**（`profiles/<p>/cordis.patch.yml`，`- id: <
 | `@deepseek-ai` scope 下包目录被清空、回收站体积不变、无 npm 日志、Defender 零威胁 | deep §16.6 |
 | `dsh.sh` 5 个 `cmd_*` 接线细节、`set -u` 陷阱 | deep §16.7 |
 | 定位第三方清理工具、`dsh_fs_audit.ps1` 三层取证 | deep §16.8–16.9 |
+| R3 补丁自愈、版本闸门 `expectedVersion`、成本探针命令 | `references/r3-patch-and-cost-probe.md` |
 | 出口代理分叉复发、`$PROFILE` 注入点定位、reg 黑名单处置 | `references/outbound-proxy-and-env-layers.md` |
 | **重启后核验**（补丁存活 + 凭据加载）的 8 项判据、`jev=ready` 双证、mutation 探针、`paoding` warn 判读 | `references/post-restart-verification.md` |
 | 遥测三类出口对照、patch 匹配语义、可证伪验证骨架 | `references/plugin-layer-telemetry-and-config.md` |
