@@ -1,3 +1,6 @@
 *.bak
 *.bak.*
 backups/
+
+# 一次性探测产物：含从 app.asar 切出的第三方源码（版权）+ 一次性手术脚本，不入库
+_probe-boot/

@@ -60,7 +60,7 @@ cd D:/dsh-npm
 > ✅ **两条自检脚本**（无参数；`python <skill根>/scripts/<脚本名>`；exit 0=健康 / 1=异常）：
 > `dsh-health-selfcheck.py`（入口 / 依赖树空壳率 / Gate9 体积；反伪证 4 场景）、
 > `dsh-desktop-selfcheck.py`（profile 一致性四类）。**`<skill根>`＝本 SKILL.md 所在目录，
-> 勿按 `~/.workbuddy/scripts` 猜（那里没有）**。已挂两条每日 automation（09:30）。
+> 勿按 `~/.workbuddy/scripts` 猜（那里没有）**。⚠️ 两脚本无 automation 挂载（2026-10-18 实测无 09:30 任务；在跑的是 `~/.workbuddy/scripts/*.sh`）。
 > ⚠️ `pnpm-runner.mjs` 的 `GIT_PREPARE_KEY_PATTERN` 只认 `git+ssh`，`github:` 简写解析出的 `git+https` 匹配不上 ⇒ 须手动补 `allowBuilds`。
 
 > 🔴 **红线执行件 —— 重启后核验（补丁存活 + 凭据加载）**：`bash ~/.workbuddy/scripts/dsh_health_probe.sh`（纯只读、rc=0、8 项）→ 判据、`jev=ready` 一行双证与日志判读陷阱见 `references/post-restart-verification.md`。
